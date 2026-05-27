@@ -58,7 +58,7 @@ def ph_time_filter(value):
         except ValueError:
             return value
     if value.tzinfo is None:
-        # Naive datetimes from PostgreSQL are UTC — localize before converting
+        # Naive datetimes are stored as UTC — localize then convert to PHT
         value = value.replace(tzinfo=UTC)
     value = value.astimezone(PH_TZ)
     return value.strftime("%b %d, %Y %I:%M %p PHT")
