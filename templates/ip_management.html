@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row gy-4">
+  <div class="col-lg-6">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <h4 class="card-title mb-3">Approved IP Addresses</h4>
+        <div class="table-responsive">
+          <table class="table table-borderless align-middle">
+            <thead>
+              <tr>
+                <th>IP Address</th>
+                <th>Label</th>
+                <th>Approved By</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ip in allowed_ips %}
+              <tr>
+                <td>{{ ip.ip }}</td>
+                <td>{{ ip.label or 'Approved' }}</td>
+                <td>{{ ip.approved_by or 'system' }}</td>
+                <td>
+                  <span class="badge bg-{{ 'success' if ip.active else 'secondary' }}">
+                    {{ 'Active' if ip.active else 'Inactive' }}
+                  </span>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="4" class="text-center text-muted">No approved IP addresses found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-body">
+        <h4 class="card-title mb-3">Blocked IP Addresses</h4>
+        <div class="table-responsive">
+          <table class="table table-borderless align-middle">
+            <thead>
+              <tr>
+                <th>IP Address</th>
+                <th>Reason</th>
+                <th>Blocked By</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ip in blocked_ips %}
+              <tr>
+                <td>{{ ip.ip }}</td>
+                <td>{{ ip.reason or 'N/A' }}</td>
+                <td>{{ ip.blocked_by or 'system' }}</td>
+                <td>
+                  <span class="badge bg-{{ 'danger' if ip.active else 'secondary' }}">
+                    {{ 'Blocked' if ip.active else 'Released' }}
+                  </span>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="4" class="text-center text-muted">No blocked IPs detected.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <h5 class="card-title mb-3">Manage Network Access</h5>
+        <form method="post" class="row g-3">
+          <div class="col-12">
+            <label class="form-label">IP Address</label>
+            <input type="text" name="ip_address" class="form-control" placeholder="192.168.1.10" required />
+          </div>
+          <div class="col-12">
+            <label class="form-label">Reason / Label</label>
+            <input type="text" name="reason" class="form-control" placeholder="Manual block or description" />
+          </div>
+          <div class="col-12 d-flex gap-2 flex-wrap">
+            <button type="submit" name="action" value="allow" class="btn btn-success">Allow IP</button>
+            <button type="submit" name="action" value="block" class="btn btn-danger">Block IP</button>
+            <button type="submit" name="action" value="unblock" class="btn btn-secondary">Unblock IP</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

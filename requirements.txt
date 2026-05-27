@@ -1,0 +1,10 @@
+Flask>=3.0
+Werkzeug>=3.0
+flask-limiter>=2.10
+flask-talisman>=1.1
+python-dotenv>=1.0
+opencv-python>=4.10.0.84
+numpy>=2.0.0
+SQLAlchemy>=2.0
+psycopg[binary]>=3.0
+gunicorn>=20.1

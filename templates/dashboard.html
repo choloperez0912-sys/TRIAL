@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row gx-4 gy-4">
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <h4 class="card-title mb-1">Enterprise Security Dashboard</h4>
+            <p class="text-muted mb-0">Live CCTV monitoring, security analytics, and approval controls.</p>
+          </div>
+          <span class="badge bg-primary">Secure Access</span>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="stat-card p-4 rounded-3 bg-light">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <div>
+                  <h5 class="mb-1">Active Users</h5>
+                  <p class="text-muted mb-0">Total registered users</p>
+                </div>
+                <span class="fs-3 fw-semibold">{{ metrics.total_users }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="stat-card p-4 rounded-3 bg-light">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <div>
+                  <h5 class="mb-1">Blocked IPs</h5>
+                  <p class="text-muted mb-0">Currently active blocks</p>
+                </div>
+                <span class="fs-3 fw-semibold">{{ metrics.blocked_ips }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="stat-card p-4 rounded-3 bg-light">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <div>
+                  <h5 class="mb-1">Pending Approvals</h5>
+                  <p class="text-muted mb-0">New login requests</p>
+                </div>
+                <span class="fs-3 fw-semibold">{{ metrics.pending_requests }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="stat-card p-4 rounded-3 bg-light">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <div>
+                  <h5 class="mb-1">Unread Alerts</h5>
+                  <p class="text-muted mb-0">Notifications for administrators</p>
+                </div>
+                <span class="fs-3 fw-semibold">{{ metrics.unread_notifications }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mt-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0">Recent Activity</h5>
+          <small class="text-muted">Last 10 events</small>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Timestamp</th>
+                <th>Event</th>
+                <th>Username</th>
+                <th>IP</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for log in recent_logs %}
+              <tr>
+                <td>{{ log.created_at | ph_time }}</td>
+                <td>{{ log.event }}</td>
+                <td>{{ log.username or 'system' }}</td>
+                <td>{{ log.ip or 'unknown' }}</td>
+                <td>
+                  <span class="badge bg-{{ 'success' if log.success else 'danger' }}">
+                    {{ 'Success' if log.success else 'Failed' }}
+                  </span>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="5" class="text-center text-muted">No recent events recorded.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Security Summary</h5>
+        <p class="text-muted">Monitor the live CCTV feed, approval queue, and system warning state from a single enterprise dashboard.</p>
+        <div class="list-group list-group-flush">
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            <span>24h Security Events</span>
+            <strong>{{ metrics.recent_security_events }}</strong>
+          </div>
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            <span>Current Approval Queue</span>
+            <strong>{{ metrics.pending_requests }}</strong>
+          </div>
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            <span>Open Alerts</span>
+            <strong>{{ metrics.unread_notifications }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <h5 class="card-title">Quick Actions</h5>
+        <div class="d-grid gap-2">
+          <a class="btn btn-primary" href="{{ url_for('camera') }}">Open CCTV Feed</a>
+          <a class="btn btn-outline-secondary" href="{{ url_for('admin_requests') }}">Review Access Requests</a>
+          <a class="btn btn-outline-secondary" href="{{ url_for('ip_management') }}">Manage IP Policies</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

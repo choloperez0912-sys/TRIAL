@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CCTV Monitoring System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+  </head>
+  <body>
+    <div class="app-shell d-flex">
+      <nav class="sidebar bg-dark text-white">
+        <div class="sidebar-brand p-4">
+          <h4 class="mb-0">NETAD CCTV Admin</h4>
+          <small class="text-muted">Monitoring Control</small>
+        </div>
+        <ul class="nav flex-column px-3">
+          <li class="nav-item mb-1">
+            <a class="nav-link text-white {% if active_page == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a>
+          </li>
+          <li class="nav-item mb-1">
+            <a class="nav-link text-white {% if active_page == 'camera' %}active{% endif %}" href="{{ url_for('camera') }}">CCTV Feed</a>
+          </li>
+          <li class="nav-item mb-1">
+            <a class="nav-link text-white {% if active_page == 'logs' %}active{% endif %}" href="{{ url_for('logs') }}">Logs</a>
+          </li>
+          <li class="nav-item mb-1">
+            <a class="nav-link text-white {% if active_page == 'ip_management' %}active{% endif %}" href="{{ url_for('ip_management') }}">IP Management</a>
+          </li>
+          <li class="nav-item mb-1">
+            <a class="nav-link text-white {% if active_page == 'notifications' %}active{% endif %}" href="{{ url_for('notifications') }}">Notifications</a>
+          </li>
+          {% if session.get('role') == 'admin' %}
+          <li class="nav-item mb-1">
+            <a class="nav-link text-white {% if active_page == 'admin_requests' %}active{% endif %}" href="{{ url_for('admin_requests') }}">Admin Requests</a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+
+      <div class="main-content flex-grow-1">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom px-4 py-3">
+          <div class="container-fluid px-0">
+            <div class="navbar-brand mb-0 fs-5">CCTV Monitoring System</div>
+            <div class="d-flex align-items-center gap-3">
+              {% if session.get('username') %}
+              <div class="text-end me-3">
+                <div class="fw-semibold">{{ session.get('username') }}</div>
+                <small class="text-muted">{{ session.get('role')|capitalize }}</small>
+              </div>
+              <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('auth.logout') }}">Logout</a>
+              {% endif %}
+            </div>
+          </div>
+        </nav>
+
+        <main class="p-4">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                  {{ message }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+
+          {% block content %}{% endblock %}
+        </main>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-0hq4t4EWU1U1wkYf5H5lRZQ7DuffVe4D8Q/1WNncRjxiYxGhPh3BjCzM49+/S0Ss" crossorigin="anonymous"></script>
+  </body>
+</html>

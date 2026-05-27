@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card shadow-sm border-0">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h4 class="card-title mb-1">Admin Approval Requests</h4>
+        <p class="text-muted mb-0">Review pending login access requests from unapproved IP addresses.</p>
+      </div>
+      <a class="btn btn-outline-primary" href="{{ url_for('dashboard') }}">Dashboard</a>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Request ID</th>
+            <th>Username</th>
+            <th>IP Address</th>
+            <th>Device</th>
+            <th>Created</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for req in requests %}
+          <tr>
+            <td>{{ req.id }}</td>
+            <td>{{ req.username or 'anonymous' }}</td>
+            <td>{{ req.ip }}</td>
+            <td>{{ req.device_info }}</td>
+            <td>{{ req.created_at }}</td>
+            <td><span class="badge bg-warning">{{ req.status|capitalize }}</span></td>
+            <td>
+              <form method="post" action="{{ url_for('handle_request_action', request_id=req.id, action='approve') }}" class="d-inline">
+                <button class="btn btn-sm btn-success">Approve</button>
+              </form>
+              <form method="post" action="{{ url_for('handle_request_action', request_id=req.id, action='deny') }}" class="d-inline">
+                <button class="btn btn-sm btn-danger">Deny</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" class="text-center text-muted">No pending access requests.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
