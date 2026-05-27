@@ -4,8 +4,8 @@ PH_TZ = timezone(timedelta(hours=8))
 
 
 def now_ph():
-    """Return current Philippine Time (UTC+8)."""
-    return datetime.now(PH_TZ).replace(tzinfo=None)
+    """Return current UTC time (stored as naive UTC, converted to PHT on display)."""
+    return datetime.utcnow()
 from werkzeug.security import generate_password_hash
 from db import execute, DB_INTEGRITY_ERRORS
 
