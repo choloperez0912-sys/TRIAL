@@ -244,3 +244,64 @@ def ensure_admin_user(admin_username, admin_password):
                 pass
     except Exception:
         pass
+
+
+# ── Whitelist (user registration approval) ──────────────────────────────────
+
+def add_to_whitelist(username, ip, device_info=None):
+    """Add a newly-registered user to the whitelist with status 'pending'.
+    If an entry already exists for this username, update the IP and reset to pending."""
+    ip = normalize_ip(ip)
+    existing = execute(
+        "SELECT * FROM user_whitelist WHERE username = ?", (username,), fetchone=True
+    )
+    if existing:
+        execute(
+            "UPDATE user_whitelist SET ip = ?, device_info = ?, status = 'pending', updated_at = ? WHERE username = ?",
+            (ip, device_info or "Unknown device", now_ph(), username),
+            commit=True,
+        )
+    else:
+        try:
+            execute(
+                "INSERT INTO user_whitelist (username, ip, device_info, status, created_at, updated_at) "
+                "VALUES (?, ?, ?, 'pending', ?, ?)",
+                (username, ip, device_info or "Unknown device", now_ph(), now_ph()),
+                commit=True,
+            )
+        except DB_INTEGRITY_ERRORS:
+            # Race condition: another worker inserted between our SELECT and INSERT — safe to ignore
+            pass
+
+
+def get_whitelist_entry_by_username(username):
+    return execute(
+        "SELECT * FROM user_whitelist WHERE username = ?", (username,), fetchone=True
+    )
+
+
+def list_whitelist(status=None):
+    if status:
+        return execute(
+            "SELECT * FROM user_whitelist WHERE status = ? ORDER BY created_at DESC",
+            (status,),
+            fetchall=True,
+        )
+    return execute("SELECT * FROM user_whitelist ORDER BY created_at DESC", fetchall=True)
+
+
+def update_whitelist_status(entry_id, status, reviewed_by=None, notes=None):
+    execute(
+        "UPDATE user_whitelist SET status = ?, reviewed_by = ?, admin_notes = ?, updated_at = ? WHERE id = ?",
+        (status, reviewed_by or "admin", notes or "", now_ph(), entry_id),
+        commit=True,
+    )
+    # Sync to users table
+    entry = execute("SELECT username FROM user_whitelist WHERE id = ?", (entry_id,), fetchone=True)
+    if entry:
+        approved_val = 1 if status == "approved" else 0
+        execute(
+            "UPDATE users SET approved = ? WHERE username = ?",
+            (approved_val, entry["username"]),
+            commit=True,
+        )
