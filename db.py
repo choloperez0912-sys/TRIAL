@@ -157,6 +157,21 @@ def init_db():
                 )
                 """
             )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS user_whitelist (
+                    id SERIAL PRIMARY KEY,
+                    username TEXT UNIQUE NOT NULL,
+                    ip TEXT NOT NULL,
+                    device_info TEXT,
+                    status TEXT NOT NULL DEFAULT 'pending',
+                    reviewed_by TEXT,
+                    admin_notes TEXT,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )
+                """
+            )
             conn.commit()
         else:
             conn.execute(
@@ -268,6 +283,21 @@ def init_db():
                 CREATE TABLE IF NOT EXISTS system_settings (
                     key TEXT PRIMARY KEY,
                     value TEXT
+                )
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS user_whitelist (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    ip TEXT NOT NULL,
+                    device_info TEXT,
+                    status TEXT NOT NULL DEFAULT 'pending',
+                    reviewed_by TEXT,
+                    admin_notes TEXT,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
                 )
                 """
             )
