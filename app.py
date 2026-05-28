@@ -38,6 +38,8 @@ from models import (
     set_system_setting,
     get_system_setting,
     ensure_admin_user,
+    list_whitelist,
+    update_whitelist_status,
 )
 from security import get_client_ip, is_ip_blocked, is_ip_whitelisted, login_required, require_admin, normalize_ip
 
@@ -79,9 +81,15 @@ app.register_blueprint(auth_bp)
 init_db()
 ensure_admin_user(app.config["ADMIN_USERNAME"], app.config["ADMIN_PASSWORD"])
 
-# Whitelist localhost by default
-create_allowed_ip("127.0.0.1", label="Localhost (default)", approved_by="system")
-create_allowed_ip("localhost", label="Localhost domain (default)", approved_by="system")
+# Whitelist localhost by default — wrapped in try/except to survive concurrent worker startup
+from db import DB_INTEGRITY_ERRORS
+for _ip, _label in [("127.0.0.1", "Localhost (default)"), ("localhost", "Localhost domain (default)")]:
+    try:
+        create_allowed_ip(_ip, label=_label, approved_by="system")
+    except DB_INTEGRITY_ERRORS:
+        pass
+    except Exception:
+        pass
 
 camera_stream = CameraStream()
 
@@ -102,24 +110,6 @@ def enforce_network_policies():
 
     if is_ip_blocked(g.client_ip):
         return render_template("access_denied.html", ip=g.client_ip, reason="This IP is blocked."), 403
-
-    # FIX: added "health_check" to match the actual function name of the /health route
-    safe_endpoints = {"static", "auth.login", "auth.register", "health_check"}
-
-    # Allow logged-in admins to access admin and IP management pages
-    admin_endpoints = {"admin_requests", "handle_request_action", "ip_management", "notifications"}
-    if session.get("role") == "admin" and endpoint in admin_endpoints:
-        return
-
-    if endpoint in safe_endpoints:
-        return
-
-    if not is_ip_whitelisted(g.client_ip):
-        return render_template(
-            "access_denied.html",
-            ip=g.client_ip,
-            reason="Your IP address is not approved for system access.",
-        ), 403
 
 
 @app.route("/health")
@@ -261,51 +251,54 @@ def notifications():
     )
 
 
+@app.route("/admin/whitelist")
+@login_required
+@require_admin
+def admin_whitelist():
+    all_entries = list_whitelist()
+    return render_template(
+        "admin_whitelist.html",
+        active_page="admin_whitelist",
+        entries=all_entries,
+    )
+
+
+@app.route("/admin/whitelist/<int:entry_id>/<action>", methods=["POST"])
+@login_required
+@require_admin
+def handle_whitelist_action(entry_id, action):
+    if action not in ("approve", "reject"):
+        flash("Invalid action.", "danger")
+        return redirect(url_for("admin_whitelist"))
+
+    admin_notes = f"{'Approved' if action == 'approve' else 'Rejected'} by {session.get('username')}"
+    status = "approved" if action == "approve" else "rejected"
+    update_whitelist_status(entry_id, status, reviewed_by=session.get("username"), notes=admin_notes)
+
+    if action == "approve":
+        create_notification(
+            title="Account approved",
+            message=f"User account has been approved by {session.get('username')}.",
+            level="success",
+        )
+        flash("Account approved. The user can now log in.", "success")
+    else:
+        create_notification(
+            title="Account rejected",
+            message=f"User account has been rejected by {session.get('username')}.",
+            level="danger",
+        )
+        flash("Account has been rejected.", "warning")
+
+    return redirect(url_for("admin_whitelist"))
+
+
+# Keep legacy route for backward compatibility
 @app.route("/admin/requests")
 @login_required
 @require_admin
 def admin_requests():
-    pending_requests = list_login_requests(status="pending")
-    return render_template(
-        "admin_requests.html",
-        active_page="admin_requests",
-        requests=pending_requests,
-    )
-
-
-@app.route("/admin/requests/<int:request_id>/<action>", methods=["POST"])
-@login_required
-@require_admin
-def handle_request_action(request_id, action):
-    request_record = next(
-        (item for item in list_login_requests(status="pending") if item["id"] == request_id),
-        None,
-    )
-    if not request_record:
-        flash("Login request not found.", "danger")
-        return redirect(url_for("admin_requests"))
-
-    if action == "approve":
-        create_allowed_ip(request_record["ip"], label="Admin approval", approved_by=session.get("username"))
-        update_login_request(request_id, "approved", admin_notes=f"Approved by {session.get('username')}")
-        create_notification(
-            title="Login request approved",
-            message=f"IP {request_record['ip']} has been approved for {request_record['username']}",
-            level="success",
-        )
-        flash("Login request approved and IP whitelist updated.", "success")
-    elif action == "deny":
-        update_login_request(request_id, "denied", admin_notes=f"Denied by {session.get('username')}")
-        create_notification(
-            title="Login request denied",
-            message=f"Access from {request_record['ip']} was denied.",
-            level="danger",
-        )
-        flash("Login request has been denied.", "warning")
-    else:
-        flash("Invalid admin action.", "danger")
-
-    return redirect(url_for("admin_requests"))
+    return redirect(url_for("admin_whitelist"))
 
 
 if __name__ == "__main__":
