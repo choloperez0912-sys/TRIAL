@@ -81,16 +81,6 @@ def login_required(view_func):
     def wrapper(*args, **kwargs):
         if "user_id" not in session:
             return redirect(url_for("auth.login"))
-
-        # Use the client IP from g (set by before_request hook)
-        client_ip = getattr(g, "client_ip", None)
-        if not client_ip:
-            client_ip = get_client_ip()
-        
-        if not is_ip_whitelisted(client_ip):
-            flash("Your IP address is not approved for system access.", "danger")
-            return redirect(url_for("auth.login"))
-
         return view_func(*args, **kwargs)
 
     return wrapper
