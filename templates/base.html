@@ -32,7 +32,7 @@
           </li>
           {% if session.get('role') == 'admin' %}
           <li class="nav-item mb-1">
-            <a class="nav-link text-white {% if active_page == 'admin_requests' %}active{% endif %}" href="{{ url_for('admin_requests') }}">Admin Requests</a>
+            <a class="nav-link text-white {% if active_page == 'admin_whitelist' %}active{% endif %}" href="{{ url_for('admin_whitelist') }}">User Whitelist</a>
           </li>
           {% endif %}
         </ul>
