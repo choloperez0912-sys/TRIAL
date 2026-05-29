@@ -299,7 +299,7 @@ def update_whitelist_status(entry_id, status, reviewed_by=None, notes=None):
     # Sync to users table
     entry = execute("SELECT username FROM user_whitelist WHERE id = ?", (entry_id,), fetchone=True)
     if entry:
-        approved_val = 1 if status == "approved" else 0
+        approved_val = True if status == "approved" else False
         execute(
             "UPDATE users SET approved = ? WHERE username = ?",
             (approved_val, entry["username"]),
