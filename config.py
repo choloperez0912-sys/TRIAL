@@ -3,10 +3,21 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class Config:
-    SECRET_KEY = os.environ.get("SECRET_KEY", "replace_with_secure_secret")
+    SECRET_KEY = os.environ.get("SECRET_KEY")
+    if not SECRET_KEY:
+        raise RuntimeError(
+            "SECRET_KEY environment variable must be set. "
+            "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+        )
+
     DATABASE_URL = os.environ.get("DATABASE_URL")
-    SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "False").lower() == "true"
+
+    # Default True — Railway always serves over HTTPS
+    SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "True").lower() == "true"
     REMEMBER_COOKIE_SECURE = SESSION_COOKIE_SECURE
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+
     CAMERA_MODE = os.environ.get("CAMERA_MODE", "local").lower()
     LOCAL_CAMERA_INDEX = os.environ.get("LOCAL_CAMERA_INDEX", "0")
     PUBLIC_CAMERA_URL = os.environ.get("PUBLIC_CAMERA_URL", "")
