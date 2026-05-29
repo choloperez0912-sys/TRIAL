@@ -1,5 +1,6 @@
 import threading
 import cv2
+import os
 
 
 class CameraStream:
@@ -31,7 +32,16 @@ class CameraStream:
             return True
 
         source = self._resolve_source()
-        self.cap = cv2.VideoCapture(source)
+
+        if self.mode == "public":
+            # Use FFmpeg backend for RTSP/HTTP streams
+            self.cap = cv2.VideoCapture(source, cv2.CAP_FFMPEG)
+            # Set a 10-second open timeout so Railway doesn't hang
+            self.cap.set(cv2.CAP_PROP_OPEN_TIMEOUT_MSEC, 10000)
+            self.cap.set(cv2.CAP_PROP_READ_TIMEOUT_MSEC, 10000)
+        else:
+            self.cap = cv2.VideoCapture(source)
+
         if not self.cap.isOpened():
             if self.cap:
                 self.cap.release()
@@ -44,10 +54,17 @@ class CameraStream:
         return True
 
     def _read_frames(self):
+        consecutive_failures = 0
         while self.running and self.cap:
             ret, frame = self.cap.read()
             if not ret:
-                break
+                consecutive_failures += 1
+                # Stop after 30 consecutive failures to avoid infinite spin
+                if consecutive_failures >= 30:
+                    self.running = False
+                    break
+                continue
+            consecutive_failures = 0
             with self.lock:
                 self.frame = frame
 
