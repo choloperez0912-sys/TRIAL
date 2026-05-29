@@ -60,7 +60,6 @@ def ph_time_filter(value):
         except ValueError:
             return value
     if value.tzinfo is None:
-        # Naive datetimes are stored as UTC — localize then convert to PHT
         value = value.replace(tzinfo=UTC)
     value = value.astimezone(PH_TZ)
     return value.strftime("%b %d, %Y %I:%M %p PHT")
@@ -69,9 +68,18 @@ def ph_time_filter(value):
 app.config.from_object(Config)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
 
-# FIX: Talisman force_https must be False on Railway (Railway handles HTTPS at the proxy level)
-# Forcing HTTPS inside the container causes redirect loops
-Talisman(app, content_security_policy=None, force_https=False)
+# Talisman: force_https=False because Railway handles HTTPS at the proxy level.
+# A minimal CSP is set; adjust as needed.
+csp = {
+    "default-src": "'self'",
+    "img-src": "'self' data: blob:",
+    # 'unsafe-inline' required: login.html has an inline <script> for Bootstrap tab switching
+    "script-src": ["'self'", "cdn.jsdelivr.net", "'unsafe-inline'"],
+    "style-src": ["'self'", "cdn.jsdelivr.net", "'unsafe-inline'"],
+    "font-src": ["'self'", "cdn.jsdelivr.net"],
+    "connect-src": "'self'",
+}
+Talisman(app, content_security_policy=csp, force_https=False)
 
 limiter = Limiter(key_func=get_remote_address, default_limits=[app.config["IP_RATE_LIMIT"]])
 limiter.init_app(app)
@@ -81,7 +89,7 @@ app.register_blueprint(auth_bp)
 init_db()
 ensure_admin_user(app.config["ADMIN_USERNAME"], app.config["ADMIN_PASSWORD"])
 
-# Whitelist localhost by default — wrapped in try/except to survive concurrent worker startup
+# Whitelist localhost by default
 from db import DB_INTEGRITY_ERRORS
 for _ip, _label in [("127.0.0.1", "Localhost (default)"), ("localhost", "Localhost domain (default)")]:
     try:
@@ -103,16 +111,24 @@ def resolve_camera_source():
     return camera_mode, camera_source
 
 
+@app.after_request
+def strip_server_headers(response):
+    """Remove headers that reveal server technology to scanners."""
+    response.headers.pop("Server", None)
+    response.headers.pop("X-Powered-By", None)
+    return response
+
+
 @app.before_request
 def enforce_network_policies():
     g.client_ip = get_client_ip()
-    endpoint = request.endpoint or ""
 
     if is_ip_blocked(g.client_ip):
         return render_template("access_denied.html", ip=g.client_ip, reason="This IP is blocked."), 403
 
 
 @app.route("/health")
+@limiter.limit("30 per minute")
 def health_check():
     return "OK", 200
 
@@ -146,6 +162,8 @@ def camera():
 
         set_system_setting("camera.mode", camera_mode)
         set_system_setting("camera.source", camera_source)
+        # Stop any existing stream before reconfiguring
+        camera_stream.stop()
         camera_stream.configure(camera_mode, camera_source)
         flash("Camera configuration updated successfully.", "success")
         return redirect(url_for("camera"))
@@ -164,13 +182,23 @@ def camera():
 
 
 def generate_frames():
+    """Generator that yields MJPEG frames. Stops cleanly if stream dies."""
+    import time
+    empty_count = 0
     while True:
         frame_bytes = camera_stream.get_frame()
         if frame_bytes:
+            empty_count = 0
             yield (
                 b"--frame\r\n"
                 b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n"
             )
+        else:
+            empty_count += 1
+            # After 5 seconds of no frames, stop the generator
+            if empty_count > 50:
+                break
+            time.sleep(0.1)
 
 
 @app.route("/stream")
@@ -293,7 +321,6 @@ def handle_whitelist_action(entry_id, action):
     return redirect(url_for("admin_whitelist"))
 
 
-# Keep legacy route for backward compatibility
 @app.route("/admin/requests")
 @login_required
 @require_admin
