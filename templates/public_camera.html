@@ -2,26 +2,24 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Public Camera View</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Live Camera Feed</title>
     <style>
-      body {font-family: Arial, sans-serif; background:#f4f4f9; margin:0; padding:0;}
-      .container {max-width:900px; margin:40px auto; padding:32px; background:white; border-radius:12px; box-shadow:0 12px 30px rgba(0,0,0,0.08);}
-      h1 {margin-top:0; color:#333;}
-      .stream-container {background:#000; border-radius:8px; overflow:hidden; margin:20px 0;}
-      img {width:100%; height:auto; display:block;}
-      .status {padding:12px; background:#e0f2fe; color:#0c4a6e; border-radius:6px; margin-top:20px; text-align:center;}
+      body { font-family: Arial, sans-serif; background: #111; margin: 0; padding: 0; }
+      .container { max-width: 960px; margin: 30px auto; padding: 20px; }
+      h1 { color: #fff; margin-top: 0; }
+      .stream-container { background: #000; border-radius: 8px; overflow: hidden; }
+      img { width: 100%; height: auto; display: block; }
+      .status { padding: 10px; color: #aaa; text-align: center; margin-top: 12px; font-size: 0.85rem; }
     </style>
   </head>
   <body>
     <div class="container">
-      <h1>Public Camera View</h1>
+      <h1>Live Camera Feed</h1>
       <div class="stream-container">
-        <img src="{{ url_for('public_feed', token=token) }}" alt="Public Camera Stream">
+        <img src="/cam/stream" alt="Live Camera Stream">
       </div>
-      <div class="status">
-        <p>Currently viewing: <code>{{ camera_url }}</code></p>
-        <p>If the stream does not display, the camera URL may not be reachable from the server.</p>
-      </div>
+      <div class="status">Live feed • No login required</div>
     </div>
   </body>
 </html>
