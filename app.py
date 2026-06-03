@@ -328,5 +328,18 @@ def admin_requests():
     return redirect(url_for("admin_whitelist"))
 
 
+@app.route("/cam")
+def public_cam():
+    camera_mode, camera_source = resolve_camera_source()
+    camera_stream.configure(camera_mode, camera_source)
+    camera_stream.start()
+    return render_template("public_camera.html", camera_url=camera_source)
+
+
+@app.route("/cam/stream")
+def public_stream_feed():
+    return Response(generate_frames(), mimetype="multipart/x-mixed-replace; boundary=frame")
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)), debug=False)
