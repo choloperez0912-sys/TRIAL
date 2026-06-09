@@ -6,13 +6,40 @@
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-start mb-3">
           <div>
-            <h4 class="card-title mb-1">Enterprise Security Dashboard</h4>
-            <p class="text-muted mb-0">Live CCTV monitoring, security analytics, and approval controls.</p>
+            <h4 class="card-title mb-1">
+              {% if session.get('role') == 'admin' %}Enterprise Security Dashboard{% else %}CCTV Monitoring Dashboard{% endif %}
+            </h4>
+            <p class="text-muted mb-0">
+              {% if session.get('role') == 'admin' %}Live CCTV monitoring, security analytics, and approval controls.{% else %}Live CCTV monitoring and your notifications.{% endif %}
+            </p>
           </div>
-          <span class="badge bg-primary">Secure Access</span>
+          <span class="badge bg-primary">{% if session.get('role') == 'admin' %}Admin Access{% else %}Secure Access{% endif %}</span>
         </div>
 
         <div class="row g-3">
+          <div class="col-md-6">
+            <div class="stat-card p-4 rounded-3 bg-light">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <div>
+                  <h5 class="mb-1">CCTV Status</h5>
+                  <p class="text-muted mb-0">Live camera feed</p>
+                </div>
+                <span class="fs-3 fw-semibold text-success">●</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="stat-card p-4 rounded-3 bg-light">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <div>
+                  <h5 class="mb-1">Unread Alerts</h5>
+                  <p class="text-muted mb-0">Your notifications</p>
+                </div>
+                <span class="fs-3 fw-semibold">{{ metrics.unread_notifications }}</span>
+              </div>
+            </div>
+          </div>
+          {% if session.get('role') == 'admin' %}
           <div class="col-md-6">
             <div class="stat-card p-4 rounded-3 bg-light">
               <div class="d-flex align-items-center justify-content-between mb-2">
@@ -46,21 +73,12 @@
               </div>
             </div>
           </div>
-          <div class="col-md-6">
-            <div class="stat-card p-4 rounded-3 bg-light">
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <div>
-                  <h5 class="mb-1">Unread Alerts</h5>
-                  <p class="text-muted mb-0">Notifications for administrators</p>
-                </div>
-                <span class="fs-3 fw-semibold">{{ metrics.unread_notifications }}</span>
-              </div>
-            </div>
-          </div>
+          {% endif %}
         </div>
       </div>
     </div>
 
+    {% if session.get('role') == 'admin' %}
     <div class="card shadow-sm border-0 mt-4">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -101,14 +119,20 @@
         </div>
       </div>
     </div>
+    {% endif %}
   </div>
 
   <div class="col-lg-4">
     <div class="card shadow-sm border-0 mb-4">
       <div class="card-body">
         <h5 class="card-title">Security Summary</h5>
-        <p class="text-muted">Monitor the live CCTV feed, approval queue, and system warning state from a single enterprise dashboard.</p>
+        <p class="text-muted">Monitor the live CCTV feed and your notifications from this dashboard.</p>
         <div class="list-group list-group-flush">
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            <span>Open Alerts</span>
+            <strong>{{ metrics.unread_notifications }}</strong>
+          </div>
+          {% if session.get('role') == 'admin' %}
           <div class="list-group-item d-flex justify-content-between align-items-center">
             <span>24h Security Events</span>
             <strong>{{ metrics.recent_security_events }}</strong>
@@ -117,10 +141,7 @@
             <span>Current Approval Queue</span>
             <strong>{{ metrics.pending_requests }}</strong>
           </div>
-          <div class="list-group-item d-flex justify-content-between align-items-center">
-            <span>Open Alerts</span>
-            <strong>{{ metrics.unread_notifications }}</strong>
-          </div>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -130,8 +151,11 @@
         <h5 class="card-title">Quick Actions</h5>
         <div class="d-grid gap-2">
           <a class="btn btn-primary" href="{{ url_for('camera') }}">Open CCTV Feed</a>
+          <a class="btn btn-outline-secondary" href="{{ url_for('notifications') }}">View Notifications</a>
+          {% if session.get('role') == 'admin' %}
           <a class="btn btn-outline-secondary" href="{{ url_for('admin_requests') }}">Review Access Requests</a>
           <a class="btn btn-outline-secondary" href="{{ url_for('ip_management') }}">Manage IP Policies</a>
+          {% endif %}
         </div>
       </div>
     </div>
