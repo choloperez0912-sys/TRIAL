@@ -7,46 +7,133 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
     <style>
-      body { background: #f0f2f5; }
+      body { margin: 0; padding: 0; overflow: hidden; }
+
+      #bg-canvas {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        z-index: 0;
+      }
+
+      .auth-wrapper {
+        position: relative;
+        z-index: 1;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
       .auth-card {
         max-width: 440px;
         width: 100%;
-        border-radius: 12px;
-        border: none;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,0.45);
+        background: rgba(255,255,255,0.13);
+        backdrop-filter: blur(20px) saturate(1.6);
+        -webkit-backdrop-filter: blur(20px) saturate(1.6);
+        box-shadow: 0 8px 48px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.55);
+        overflow: hidden;
+      }
+
+      .brand-header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #2d3561 100%);
+        border-radius: 16px 16px 0 0;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid rgba(255,255,255,0.12);
+      }
+
+      .nav-tabs {
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+        padding: 0 1rem;
       }
       .nav-tabs .nav-link {
-        color: #6c757d;
-        font-weight: 500;
+        color: #888;
+        font-weight: 600;
+        font-size: 13px;
         border: none;
         border-bottom: 2px solid transparent;
-        padding: 0.75rem 1.5rem;
+        padding: 0.7rem 1.2rem;
         border-radius: 0;
+        letter-spacing: 0.02em;
       }
       .nav-tabs .nav-link.active {
-        color: #0d6efd;
-        border-bottom: 2px solid #0d6efd;
+        color: #1a1a2e;
+        border-bottom: 2px solid #1a1a2e;
         background: none;
       }
-      .nav-tabs { border-bottom: 1px solid #dee2e6; }
-      .brand-header {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        border-radius: 12px 12px 0 0;
-        padding: 1.5rem 2rem;
-        color: #fff;
+
+      .tab-content {
+        padding: 1.2rem 1.5rem 1.5rem;
       }
+
+      .form-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #2a2a3a;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .form-control {
+        background: rgba(255,255,255,0.55) !important;
+        border: 1px solid rgba(200,205,220,0.7);
+        border-radius: 8px;
+        font-size: 13px;
+        color: #1a1a2e;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+        backdrop-filter: blur(4px);
+      }
+      .form-control::placeholder { color: rgba(100,100,130,0.45); }
+      .form-control:focus {
+        background: rgba(255,255,255,0.75) !important;
+        border-color: rgba(45,53,97,0.5);
+        box-shadow: 0 0 0 3px rgba(45,53,97,0.1);
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #1a1a2e 0%, #2d3561 100%);
+        border: none;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 10px;
+        box-shadow: 0 2px 12px rgba(20,20,60,0.25);
+      }
+      .btn-primary:hover { background: linear-gradient(135deg, #2d3561 0%, #1a1a2e 100%); }
+
+      .btn-success {
+        background: linear-gradient(135deg, #1a3a2e 0%, #2d6153 100%);
+        border: none;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 10px;
+        box-shadow: 0 2px 12px rgba(20,60,40,0.25);
+      }
+      .btn-success:hover { background: linear-gradient(135deg, #2d6153 0%, #1a3a2e 100%); }
+
+      .text-muted { font-size: 11px; color: rgba(60,60,90,0.6) !important; }
     </style>
   </head>
   <body>
-    <div class="d-flex justify-content-center align-items-center" style="min-height: 100vh;">
-      <div class="auth-card card">
+
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="auth-wrapper">
+      <div class="auth-card">
         <div class="brand-header">
-          <h5 class="mb-0 fw-bold text-white">&#128247; GROUP 5 - CCTV Monitoring System</h5>
-          <small class="opacity-75">Secure access portal</small>
+          <h5 class="mb-0 fw-bold text-white">📷 GROUP 5 — CCTV Monitoring System</h5>
+          <small class="opacity-50">Secure access portal</small>
         </div>
 
         <div class="card-body p-0">
-          <ul class="nav nav-tabs px-4 pt-2" id="authTab" role="tablist">
+          <ul class="nav nav-tabs" id="authTab" role="tablist">
             <li class="nav-item" role="presentation">
               <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#loginPane" type="button" role="tab">Sign In</button>
             </li>
@@ -55,17 +142,17 @@
             </li>
           </ul>
 
-          <div class="tab-content px-4 pb-4 pt-3">
+          <div class="tab-content">
             <!-- LOGIN TAB -->
             <div class="tab-pane fade show active" id="loginPane" role="tabpanel">
-              <p class="text-muted small mb-3">Enter your credentials. Only approved accounts can log in.</p>
+              <p class="text-muted mb-3">Enter your credentials. Only approved accounts can log in.</p>
               <form method="post" action="{{ url_for('auth.login') }}">
                 <div class="mb-3">
-                  <label class="form-label fw-semibold">Username</label>
+                  <label class="form-label">Username</label>
                   <input type="text" name="username" class="form-control" placeholder="Enter username" required autocomplete="username" />
                 </div>
                 <div class="mb-4">
-                  <label class="form-label fw-semibold">Password</label>
+                  <label class="form-label">Password</label>
                   <input type="password" name="password" class="form-control" placeholder="Enter password" required autocomplete="current-password" />
                 </div>
                 <button type="submit" class="btn btn-primary w-100 py-2">Sign In</button>
@@ -74,18 +161,18 @@
 
             <!-- REGISTER TAB -->
             <div class="tab-pane fade" id="registerPane" role="tabpanel">
-              <p class="text-muted small mb-3">Create an account. Your registration will be reviewed by an admin before you can log in.</p>
+              <p class="text-muted mb-3">Create an account. Your registration will be reviewed by an admin before you can log in.</p>
               <form method="post" action="{{ url_for('auth.register') }}" id="registerForm">
                 <div class="mb-3">
-                  <label class="form-label fw-semibold">Username</label>
+                  <label class="form-label">Username</label>
                   <input type="text" name="username" class="form-control" placeholder="Choose a username" required autocomplete="username" />
                 </div>
                 <div class="mb-3">
-                  <label class="form-label fw-semibold">Password</label>
+                  <label class="form-label">Password</label>
                   <input type="password" name="password" class="form-control" placeholder="Min. 6 characters" required autocomplete="new-password" />
                 </div>
                 <div class="mb-4">
-                  <label class="form-label fw-semibold">Confirm Password</label>
+                  <label class="form-label">Confirm Password</label>
                   <input type="password" name="confirm" class="form-control" placeholder="Repeat your password" required autocomplete="new-password" />
                 </div>
                 <button type="submit" class="btn btn-success w-100 py-2">Create Account</button>
@@ -98,7 +185,7 @@
             {% if messages %}
               <div class="px-4 pb-3">
                 {% for category, message in messages %}
-                  <div class="alert alert-{{ category }} alert-dismissible fade show mb-2" role="alert" style="font-size: 0.875rem;">
+                  <div class="alert alert-{{ category }} alert-dismissible fade show mb-2" role="alert" style="font-size: 0.8rem; background: rgba(255,255,255,0.6); backdrop-filter: blur(8px);">
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                   </div>
@@ -112,12 +199,90 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+      /* Tab switch from URL param */
       const params = new URLSearchParams(window.location.search);
       if (params.get('tab') === 'register') {
-        const tabEl = document.getElementById('register-tab');
-        const tab = new bootstrap.Tab(tabEl);
-        tab.show();
+        new bootstrap.Tab(document.getElementById('register-tab')).show();
       }
+
+      /* Silver glass animated background */
+      const canvas = document.getElementById('bg-canvas');
+      const ctx = canvas.getContext('2d');
+
+      function resize() {
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      const orbs = [
+        { x:0.15, y:0.2,  r:0.38, c:'rgba(180,190,210,', speed:0.0004, phase:0 },
+        { x:0.78, y:0.75, r:0.42, c:'rgba(200,205,220,', speed:0.0005, phase:1.2 },
+        { x:0.5,  y:0.5,  r:0.30, c:'rgba(160,175,200,', speed:0.0003, phase:2.4 },
+        { x:0.85, y:0.15, r:0.28, c:'rgba(220,220,230,', speed:0.0006, phase:0.8 },
+        { x:0.1,  y:0.82, r:0.25, c:'rgba(190,195,215,', speed:0.0005, phase:3.1 },
+      ];
+
+      const shimmers = Array.from({length: 6}, (_, i) => ({
+        x: Math.random(),
+        speed: 0.00012 + i * 0.00004,
+        alpha: 0.06 + Math.random() * 0.06,
+        width: 60 + Math.random() * 80
+      }));
+
+      let t = 0;
+
+      function draw() {
+        const W = canvas.width, H = canvas.height;
+
+        ctx.fillStyle = '#c8cdd8';
+        ctx.fillRect(0, 0, W, H);
+
+        const vg = ctx.createRadialGradient(W*0.5, H*0.5, 0, W*0.5, H*0.5, W*0.7);
+        vg.addColorStop(0, 'rgba(240,242,248,0.4)');
+        vg.addColorStop(1, 'rgba(150,158,175,0.5)');
+        ctx.fillStyle = vg;
+        ctx.fillRect(0, 0, W, H);
+
+        orbs.forEach(o => {
+          const ox = (o.x + Math.sin(t * o.speed * 1000 + o.phase) * 0.06) * W;
+          const oy = (o.y + Math.cos(t * o.speed * 800  + o.phase) * 0.05) * H;
+          const rad = o.r * W;
+          const g = ctx.createRadialGradient(ox, oy, 0, ox, oy, rad);
+          g.addColorStop(0, o.c + '0.28)');
+          g.addColorStop(0.5, o.c + '0.10)');
+          g.addColorStop(1, o.c + '0)');
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, W, H);
+        });
+
+        shimmers.forEach(s => {
+          s.x = (s.x + s.speed) % 1.4;
+          const sx = (s.x - 0.2) * W;
+          const g = ctx.createLinearGradient(sx, 0, sx + s.width, H);
+          g.addColorStop(0, 'rgba(255,255,255,0)');
+          g.addColorStop(0.5, `rgba(255,255,255,${s.alpha})`);
+          g.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.moveTo(sx - 40, -10);
+          ctx.lineTo(sx + s.width * 0.4, -10);
+          ctx.lineTo(sx + s.width * 0.4 + 60, H + 10);
+          ctx.lineTo(sx - 40 + 60, H + 10);
+          ctx.closePath();
+          ctx.fill();
+        });
+
+        for (let i = 0; i < 180; i++) {
+          ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.06})`;
+          ctx.fillRect(Math.random() * W, Math.random() * H, 1, 1);
+        }
+
+        t += 16;
+        requestAnimationFrame(draw);
+      }
+      draw();
     </script>
   </body>
 </html>
