@@ -22,15 +22,15 @@
             <a class="nav-link text-white {% if active_page == 'camera' %}active{% endif %}" href="{{ url_for('camera') }}">CCTV Feed</a>
           </li>
           <li class="nav-item mb-1">
+            <a class="nav-link text-white {% if active_page == 'notifications' %}active{% endif %}" href="{{ url_for('notifications') }}">Notifications</a>
+          </li>
+          {% if session.get('role') == 'admin' %}
+          <li class="nav-item mb-1">
             <a class="nav-link text-white {% if active_page == 'logs' %}active{% endif %}" href="{{ url_for('logs') }}">Logs</a>
           </li>
           <li class="nav-item mb-1">
             <a class="nav-link text-white {% if active_page == 'ip_management' %}active{% endif %}" href="{{ url_for('ip_management') }}">IP Management</a>
           </li>
-          <li class="nav-item mb-1">
-            <a class="nav-link text-white {% if active_page == 'notifications' %}active{% endif %}" href="{{ url_for('notifications') }}">Notifications</a>
-          </li>
-          {% if session.get('role') == 'admin' %}
           <li class="nav-item mb-1">
             <a class="nav-link text-white {% if active_page == 'admin_whitelist' %}active{% endif %}" href="{{ url_for('admin_whitelist') }}">User Whitelist</a>
           </li>
