@@ -1,6 +1,6 @@
 import threading
+import time
 import cv2
-import os
 
 
 class CameraStream:
@@ -11,6 +11,7 @@ class CameraStream:
         self.lock = threading.Lock()
         self.frame = None
         self.running = False
+        self._frame_time = 0  # timestamp of last captured frame
 
     def configure(self, mode: str, source: str):
         mode = (mode or "local").lower()
@@ -34,13 +35,13 @@ class CameraStream:
         source = self._resolve_source()
 
         if self.mode == "public":
-            # Use FFmpeg backend for RTSP/HTTP streams
             self.cap = cv2.VideoCapture(source, cv2.CAP_FFMPEG)
-            # Set a 10-second open timeout so Railway doesn't hang
             self.cap.set(cv2.CAP_PROP_OPEN_TIMEOUT_MSEC, 10000)
             self.cap.set(cv2.CAP_PROP_READ_TIMEOUT_MSEC, 10000)
+            self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         else:
             self.cap = cv2.VideoCapture(source)
+            self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
         if not self.cap.isOpened():
             if self.cap:
@@ -59,21 +60,25 @@ class CameraStream:
             ret, frame = self.cap.read()
             if not ret:
                 consecutive_failures += 1
-                # Stop after 30 consecutive failures to avoid infinite spin
                 if consecutive_failures >= 30:
                     self.running = False
                     break
+                time.sleep(0.05)
                 continue
             consecutive_failures = 0
             with self.lock:
                 self.frame = frame
+                self._frame_time = time.time()
 
     def get_frame(self):
         with self.lock:
             if self.frame is None or self.cap is None:
-                return None
-            ret, buffer = cv2.imencode(".jpg", self.frame)
-            return buffer.tobytes() if ret else None
+                return None, 0
+            ret, buffer = cv2.imencode(
+                ".jpg", self.frame,
+                [cv2.IMWRITE_JPEG_QUALITY, 85]
+            )
+            return (buffer.tobytes() if ret else None), self._frame_time
 
     def stop(self):
         self.running = False
