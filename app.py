@@ -176,22 +176,33 @@ def camera():
 
 
 def generate_frames():
-    """Generator that yields MJPEG frames. Stops cleanly if stream dies."""
+    """Generator that yields MJPEG frames with low-latency frame dropping."""
     import time
+
+    TARGET_FPS = 25
+    frame_interval = 1.0 / TARGET_FPS
+    last_sent_time = 0.0
     empty_count = 0
+
     while True:
-        frame_bytes = camera_stream.get_frame()
+        frame_bytes, frame_time = camera_stream.get_frame()
+
         if frame_bytes:
             empty_count = 0
-            yield (
-                b"--frame\r\n"
-                b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n"
-            )
+            now = time.time()
+            if now - last_sent_time >= frame_interval:
+                last_sent_time = now
+                yield (
+                    b"--frame\r\n"
+                    b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n"
+                )
+            else:
+                time.sleep(0.001)
         else:
             empty_count += 1
             if empty_count > 50:
                 break
-            time.sleep(0.1)
+            time.sleep(0.02)
 
 
 @app.route("/stream")
