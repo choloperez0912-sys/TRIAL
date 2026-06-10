@@ -133,12 +133,14 @@ def health_check():
 def dashboard():
     metrics = fetch_dashboard_metrics()
     recent_logs = list_recent_logs(limit=10)
-    unread_notifications = list_notifications(target_role=session.get("role", "user"), only_unread=True)
+    camera_mode, camera_source = resolve_camera_source()
+    camera_stream.configure(camera_mode, camera_source)
+    camera_online = camera_stream.start()
     return render_template(
         "dashboard.html",
         metrics=metrics,
         recent_logs=recent_logs,
-        notifications=unread_notifications,
+        camera_online=camera_online,
         active_page="dashboard",
     )
 
