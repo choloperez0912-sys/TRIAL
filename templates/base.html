@@ -21,9 +21,6 @@
           <li class="nav-item mb-1">
             <a class="nav-link text-white {% if active_page == 'camera' %}active{% endif %}" href="{{ url_for('camera') }}">CCTV Feed</a>
           </li>
-          <li class="nav-item mb-1">
-            <a class="nav-link text-white {% if active_page == 'notifications' %}active{% endif %}" href="{{ url_for('notifications') }}">Notifications</a>
-          </li>
           {% if session.get('role') == 'admin' %}
           <li class="nav-item mb-1">
             <a class="nav-link text-white {% if active_page == 'logs' %}active{% endif %}" href="{{ url_for('logs') }}">Logs</a>
