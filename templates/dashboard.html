@@ -123,6 +123,7 @@
   </div>
 
   <div class="col-lg-4">
+    {% if session.get('role') == 'admin' %}
     <div class="card shadow-sm border-0 mb-4">
       <div class="card-body">
         <h5 class="card-title">Security Summary</h5>
@@ -132,7 +133,6 @@
             <span>Open Alerts</span>
             <strong>{{ metrics.unread_notifications }}</strong>
           </div>
-          {% if session.get('role') == 'admin' %}
           <div class="list-group-item d-flex justify-content-between align-items-center">
             <span>24h Security Events</span>
             <strong>{{ metrics.recent_security_events }}</strong>
@@ -141,10 +141,10 @@
             <span>Current Approval Queue</span>
             <strong>{{ metrics.pending_requests }}</strong>
           </div>
-          {% endif %}
         </div>
       </div>
     </div>
+    {% endif %}
 
     <div class="card shadow-sm border-0">
       <div class="card-body">
