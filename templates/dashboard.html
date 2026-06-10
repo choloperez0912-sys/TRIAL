@@ -24,7 +24,11 @@
                   <h5 class="mb-1">CCTV Status</h5>
                   <p class="text-muted mb-0">Live camera feed</p>
                 </div>
-                <span class="fs-3 fw-semibold text-success">●</span>
+                {% if camera_online %}
+                  <span class="fs-3 fw-semibold text-success">● Online</span>
+                {% else %}
+                  <span class="fs-3 fw-semibold text-danger">● Offline</span>
+                {% endif %}
               </div>
             </div>
           </div>
