@@ -136,11 +136,13 @@ def dashboard():
     camera_mode, camera_source = resolve_camera_source()
     camera_stream.configure(camera_mode, camera_source)
     camera_online = camera_stream.start()
+    unread_notifications = list_notifications(target_role=session.get("role", "user"), only_unread=True)
     return render_template(
         "dashboard.html",
         metrics=metrics,
         recent_logs=recent_logs,
         camera_online=camera_online,
+        notifications=unread_notifications,
         active_page="dashboard",
     )
 
